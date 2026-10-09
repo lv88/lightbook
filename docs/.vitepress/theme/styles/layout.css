@@ -1,0 +1,211 @@
+/** 版面：中文姓氏可读的长行宽、段落节奏、导航与首页（含自定义块） */
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  text-rendering: optimizeLegibility;
+}
+
+/* ---------- 正文排版 ---------- */
+
+.vp-doc {
+  font-family: var(--lb-serif);
+  font-size: var(--lb-font-size);
+  line-height: var(--lb-line-height);
+  letter-spacing: var(--lb-letter-spacing);
+}
+
+.vp-doc p,
+.vp-doc li,
+.vp-doc blockquote p {
+  letter-spacing: var(--lb-letter-spacing);
+}
+
+.vp-doc p {
+  margin: var(--lb-paragraph-gap) 0;
+  text-align: justify;
+}
+
+.vp-doc h1 {
+  font-family: var(--lb-serif);
+  font-size: 1.7em;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc h2 {
+  margin-top: 2.4em;
+  padding-top: 0.6em;
+  border-top: 1px solid var(--vp-c-divider);
+}
+
+.vp-doc h3 {
+  font-size: 1.15em;
+  color: var(--vp-c-text-1);
+}
+
+.vp-doc a {
+  text-decoration: none;
+  border-bottom: 1px solid var(--lb-cinnabar);
+  transition: color var(--lb-transition), border-color var(--lb-transition);
+}
+
+.vp-doc a:hover {
+  color: var(--lb-cinnabar-soft);
+  border-bottom-color: var(--lb-cinnabar-soft);
+}
+
+/* 行文中的偈颂：原文用中文引号引在一行内，此处略微居中、留出天头 */
+.vp-doc blockquote {
+  border-left: 3px solid var(--lb-gold);
+  background: var(--vp-c-bg-soft);
+  padding: 0.4em 1.1em;
+  border-radius: 0 6px 6px 0;
+}
+
+/* 默认主题的页底翻页与自定义 lb-chapter-nav 重复，隐藏默认者 */
+.VPDocFooter nav.prev-next {
+  display: none;
+}
+
+/* ---------- 侧边栏与大纲 ---------- */
+
+.VPSidebar {
+  font-family: var(--lb-sans);
+}
+
+.VPSidebarItem.is-link > .item .text {
+  line-height: 1.6;
+}
+
+.VPSidebarItem.is-active > .item {
+  border-left: 2px solid var(--lb-cinnabar);
+}
+
+.VPDocAsideOutline .outline-title {
+  font-family: var(--lb-sans);
+  letter-spacing: 0.08em;
+}
+
+/* ---------- 首页 ---------- */
+
+.VPHero .name {
+  font-family: var(--lb-serif);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: linear-gradient(120deg, #9e2b25 10%, #b8860b 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: var(--vp-home-hero-name-color, transparent);
+}
+
+.VPHero .text {
+  font-family: var(--lb-serif);
+  letter-spacing: 0.3em;
+  color: var(--lb-cinnabar);
+}
+
+.VPHero .tagline {
+  font-family: var(--lb-serif);
+  color: var(--vp-c-text-2);
+}
+
+.VPFeatures {
+  font-family: var(--lb-sans);
+}
+
+.VPHome .VPHomeContent {
+  font-family: var(--lb-serif);
+}
+
+/* ---------- 自定义容器：全书目录 ---------- */
+
+.lb-toc-group {
+  margin: 2rem 0 0;
+}
+
+.lb-toc-group h2 {
+  border-top: none;
+  margin-top: 0;
+  padding-top: 0;
+  font-size: 1.25em;
+}
+
+.lb-toc-group .lb-toc-note {
+  font-family: var(--lb-sans);
+  font-size: 0.85em;
+  color: var(--vp-c-text-2);
+  margin-bottom: 0.9rem;
+}
+
+.lb-toc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr));
+  gap: 0.75rem;
+}
+
+.lb-toc-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 10px;
+  background: var(--vp-c-bg-soft);
+  text-decoration: none;
+  transition: transform var(--lb-transition), border-color var(--lb-transition),
+    box-shadow var(--lb-transition);
+}
+
+.lb-toc-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--lb-cinnabar);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.lb-toc-card .lb-toc-title {
+  font-weight: 500;
+  line-height: 1.6;
+  color: var(--vp-c-text-1);
+}
+
+.lb-toc-card .lb-toc-meta {
+  font-family: var(--lb-sans);
+  font-size: 0.75rem;
+  color: var(--vp-c-text-3);
+  letter-spacing: 0.04em;
+}
+
+.lb-toc-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.6rem;
+  margin-top: 0.15rem;
+}
+
+.lb-toc-sub a {
+  border-bottom: none;
+}
+
+/* 传承脉络示意图 */
+.lb-lineage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 1.2rem 0 0.4rem;
+}
+
+.lb-lineage span {
+  font-family: var(--lb-sans);
+  font-size: 0.82rem;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--vp-c-border);
+  border-radius: 999px;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-soft);
+}

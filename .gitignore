@@ -1,0 +1,9 @@
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+docs/.vitepress/data/sidebar.mjs
+docs/.vitepress/data/generated-files.json
+.DS_Store
+*.log
+.vscode/
+.idea/

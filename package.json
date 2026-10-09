@@ -1,0 +1,16 @@
+{
+  "name": "lightbook",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "《菩提道次第师师相承传——庄严圣教最胜宝鬘》郭和卿译本 VitePress 电子书站",
+  "scripts": {
+    "gen": "node scripts/split.mjs",
+    "dev": "npm run gen && vitepress dev docs",
+    "build": "npm run gen && vitepress build docs",
+    "preview": "vitepress preview docs"
+  },
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
+}
