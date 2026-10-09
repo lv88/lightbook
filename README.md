@@ -51,9 +51,19 @@ npm run preview # 预览构建产物
 
 调整分组边界或修改章节归属，请编辑 `scripts/book-config.mjs` 后重跑 `npm run gen`。
 
-## 发布到 GitHub / Gitee Pages
+## 发布
 
-`base` 已按仓库名设为 `/lightbook/`，直接推送由 Pages 发布即可；若部署到根域名或改了仓库名，请同步修改 `docs/.vitepress/config.mts` 的 `base`。
+`base` 由 `docs/.vitepress/config.mts` 自动判定，无需手改：
+
+| 部署环境 | 生效 base |
+| --- | --- |
+| Vercel / Cloudflare Pages（根域名） | `/` |
+| GitHub / Gitee Pages（仓库子路径） | `/lightbook/` |
+| 其他／需覆盖 | 设置环境变量 `SITE_BASE`，如 `SITE_BASE=/` 或 `SITE_BASE=/lightbook/` |
+
+仓库已附带 `vercel.json`，指定 `buildCommand: npm run build` 与 `outputDirectory: docs/.vitepress/dist`；推送后 Vercel 按此构建即可。
+
+### GitHub / Gitee Pages
 
 仓库已附带 GitHub Actions 工作流 `.github/workflows/deploy.yml`：推送到 `main` 时构建并发布到 GitHub Pages。使用 Gitee Pages 时，可在本地构建后上传 `docs/.vitepress/dist` 内容，或在 Gitee 流水线中执行 `npm ci && npm run build`。
 

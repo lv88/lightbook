@@ -1,6 +1,20 @@
 import { defineConfig } from 'vitepress'
 import { bookTitle, sidebar } from './data/sidebar.mjs'
 
+/**
+ * 部署基路径：Vercel 部署在域名根路径，GitHub / Gitee Pages 部署在 /<repo>/ 子路径。
+ * 可用 SITE_BASE 环境变量显式指定（如 SITE_BASE=/ 或 SITE_BASE=/lightbook/）。
+ */
+const resolveBase = (): string => {
+  const fromEnv = process.env.SITE_BASE
+  if (fromEnv) {
+    return fromEnv.endsWith('/') ? fromEnv : `${fromEnv}/`
+  }
+  return process.env.VERCEL || process.env.CF_PAGES ? '/' : '/lightbook/'
+}
+
+const base = resolveBase()
+
 const SITE_TITLE = '菩提道次第师师相承传'
 const SITE_DESC =
   '《菩提道次第师师相承传——庄严圣教最胜宝鬘》郭和卿译本简体横排电子版：八十四篇祖师行传、附传与全圆道体师承脉络。'
@@ -35,13 +49,13 @@ const tokenize = (text: string): string[] => {
 }
 
 export default defineConfig({
-  base: '/lightbook/',
+  base,
   lang: 'zh-CN',
   title: SITE_TITLE,
   description: SITE_DESC,
   cleanUrls: true,
   head: [
-    ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+    ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }],
     ['meta', { name: 'theme-color', content: '#9e2b25' }],
     ['meta', { name: 'author', content: '耶喜绛称 著 · 郭和卿 译' }],
     ['meta', { property: 'og:title', content: `${SITE_TITLE}——庄严圣教最胜宝鬘` }],
