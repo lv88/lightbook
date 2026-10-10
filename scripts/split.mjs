@@ -12,6 +12,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import {
+  APPENDIX_ROOT,
+  APPENDIX_TITLE_RE,
   CHAPTERS_ROOT,
   DATA_FILE,
   DOCS_ROOT,
@@ -19,7 +21,8 @@ import {
   EXPECTED_MAIN_COUNT,
   GROUPS,
   MANIFEST_FILE,
-  SOURCE
+  SOURCE,
+  TRANSLATOR_APPENDIX
 } from './book-config.mjs'
 
 const CN_DIGITS = { 零: 0, 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9 }
@@ -109,10 +112,31 @@ function parseNodes(lines) {
   return { bookTitle, nodes }
 }
 
-/** 把扁平节点组织成「主传 → 子章节」两级树 */
+/**
+ * 把扁平节点组织成「主传 → 子章节」两级树；
+ * 末尾的译者附录单独抽出（译者自撰，非原著正文），不与章节树混编。
+ */
 function buildTree(nodes) {
   const tree = []
+  const appendix = { title: '', body: [], children: [] }
+  let inAppendix = false
+
   for (const node of nodes) {
+    if (!inAppendix && node.level <= 2 && APPENDIX_TITLE_RE.test(node.title)) {
+      inAppendix = true
+      appendix.title = node.title
+      appendix.body = node.body
+      continue
+    }
+    if (inAppendix) {
+      if (node.level <= 2) {
+        warnings.push(`译者附录之后出现同级标题「${node.title}」，已忽略`)
+        continue
+      }
+      appendix.children.push({ level: node.level, title: node.title, body: node.body })
+      continue
+    }
+
     const matched = MAIN_TITLE_RE.exec(node.title)
     const ordinal = matched ? cn2num(matched[1]) : 0
     const prev = tree[tree.length - 1]
@@ -131,7 +155,8 @@ function buildTree(nodes) {
     }
     prev.children.push({ level: node.level, title: node.title, body: node.body })
   }
-  return tree
+
+  return { tree, appendix: appendix.title ? appendix : null }
 }
 
 /** 清洗正文：行尾空白、多余空行、行首 Markdown 敏感字符转义 */
@@ -177,7 +202,7 @@ function groupOf(ordinal) {
 function main() {
   const lines = readSourceLines()
   const { bookTitle, nodes } = parseNodes(lines)
-  const tree = buildTree(nodes)
+  const { tree, appendix } = buildTree(nodes)
 
   if (tree.length !== EXPECTED_MAIN_COUNT) {
     throw new Error(`主传章节数应为 ${EXPECTED_MAIN_COUNT} 篇，实际解析出 ${tree.length} 篇`)
@@ -230,8 +255,11 @@ function main() {
         warnings.push(`空子章节（未生成页面）：${chapter.title} → ${child.title}`)
         continue
       }
-      const file = `${pad(children.length + 1)}.md`
-      const link = `/chapters/${dir}/${(children.length + 1)}`
+      // 文件名与链接必须同步补零：文件是 01.md，链接就必须是 /01，
+      // 否则带上 cleanUrls 后子页会出现 404。
+      const slug = pad(children.length + 1)
+      const file = `${slug}.md`
+      const link = `/chapters/${dir}/${slug}`
       if (seenLinks.has(link)) throw new Error(`链接重复：${link}`)
       seenLinks.add(link)
 
@@ -265,6 +293,104 @@ function main() {
     bucket.chapters.push(record)
   }
 
+  // 译者附录：单独成部输出到 docs/appendix，不进入上面的章节树。
+  const appendixRootLink = '/appendix/'
+  const appendixSidebar = []
+  const appendixFlat = []
+  let appendixCount = 0
+
+  if (appendix) {
+    fs.mkdirSync(APPENDIX_ROOT, { recursive: true })
+
+    const appendixIndexBody = cleanBody(appendix.body)
+    if (seenLinks.has(appendixRootLink)) throw new Error(`链接重复：${appendixRootLink}`)
+    seenLinks.add(appendixRootLink)
+
+    const appendixIndex = [
+      frontmatter({
+        title: appendix.title,
+        author: TRANSLATOR_APPENDIX.author,
+        kind: 'translator-appendix',
+        bookTitle
+      }),
+      `# ${appendix.title}`,
+      '',
+      `*${TRANSLATOR_APPENDIX.author} 撰*`,
+      '',
+      '::: tip 关于本篇',
+      TRANSLATOR_APPENDIX.notice,
+      ':::',
+      '',
+      appendixIndexBody,
+      ''
+    ].filter((x) => x !== null).join('\n')
+
+    fs.writeFileSync(path.join(APPENDIX_ROOT, 'index.md'), `${appendixIndex}\n`, 'utf8')
+    writtenTargets.push('appendix/index.md')
+    appendixCount += 1
+
+    const appendixChildren = []
+    for (const child of appendix.children) {
+      const body = cleanBody(child.body)
+      if (!body) {
+        skippedEmpty += 1
+        warnings.push(`译者附录空小节（未生成页面）：${child.title}`)
+        continue
+      }
+      const slug = pad(appendixChildren.length + 1)
+      const link = `/appendix/${slug}`
+      if (seenLinks.has(link)) throw new Error(`链接重复：${link}`)
+      seenLinks.add(link)
+
+      const page = [
+        frontmatter({
+          title: child.title,
+          author: TRANSLATOR_APPENDIX.author,
+          kind: 'translator-appendix',
+          parent: appendix.title,
+          parentLink: appendixRootLink,
+          bookTitle
+        }),
+        `# ${child.title}`,
+        '',
+        `> 本篇为 ${TRANSLATOR_APPENDIX.author} 所撰《学习六部》总叙之一段，非原著正文，详见[附录总叙](${appendixRootLink})。`,
+        '',
+        body,
+        ''
+      ].join('\n')
+
+      fs.writeFileSync(path.join(APPENDIX_ROOT, `${slug}.md`), `${page}\n`, 'utf8')
+      writtenTargets.push(`appendix/${slug}.md`)
+      appendixCount += 1
+      appendixChildren.push({ text: child.title, link })
+    }
+
+    appendixFlat.push(
+      { title: appendix.title, link: appendixRootLink, group: TRANSLATOR_APPENDIX.text, author: TRANSLATOR_APPENDIX.author, type: 'translator' },
+      ...appendixChildren.map((child) => ({
+        title: child.text,
+        link: child.link,
+        group: TRANSLATOR_APPENDIX.text,
+        author: TRANSLATOR_APPENDIX.author,
+        parent: appendix.title,
+        type: 'translator'
+      }))
+    )
+
+    appendixSidebar.push({
+      text: TRANSLATOR_APPENDIX.text,
+      collapsed: false,
+      items: [
+        { text: appendix.title, link: appendixRootLink },
+        ...(appendixChildren.length
+          ? [{ text: '四大段', collapsed: false, items: appendixChildren }]
+          : [])
+      ]
+    })
+
+    pageCount += appendixCount
+  }
+
   const sidebar = groups.map((g) => ({
     text: g.text,
     collapsed: false,
@@ -292,13 +418,48 @@ function main() {
     ])
   )
 
-  const summary = { bookTitle, mainCount: tree.length, pageCount, skippedEmpty }
+  /**
+   * 自检：每条 link 都必须落到真实存在的 md 文件上。
+   * VitePress 开启 cleanUrls 后不做回退重试，链接写错（如补零不一致）会直接 404，
+   * 因此在生成阶段就校验，避免坏链接流入站点。
+   */
+  const resolveLinkFile = (link) => {
+    const rel = link.replace(/^\//, '').replace(/\/$/, '')
+    const asDir = path.join(DOCS_ROOT, rel, 'index.md')
+    const asFile = path.join(DOCS_ROOT, `${rel}.md`)
+    if (fs.existsSync(asDir)) return asDir
+    if (fs.existsSync(asFile)) return asFile
+    return null
+  }
+
+  const broken = [...flat, ...appendixFlat].filter((item) => !resolveLinkFile(item.link))
+  if (broken.length) {
+    throw new Error(
+      `以下 ${broken.length} 条链接没有对应页面文件（cleanUrls 下会 404）：\n` +
+        broken.map((item) => `       - ${item.title} → ${item.link}`).join('\n')
+    )
+  }
+
+  const summary = {
+    bookTitle,
+    mainCount: tree.length,
+    pageCount,
+    skippedEmpty,
+    appendixCount
+  }
   const dataFileContent = [
     '// 本文件由 scripts/split.mjs 自动生成，请勿手工修改；改动内容源后重跑 `npm run gen`。',
     `export const bookTitle = ${JSON.stringify(bookTitle)}`,
     `export const booksSummary = ${JSON.stringify(summary, null, 2)}`,
     `export const sidebar = ${JSON.stringify(sidebar, null, 2)}`,
     `export const chapters = ${JSON.stringify(flat, null, 2)}`,
+    `export const translator = ${JSON.stringify(
+      { author: TRANSLATOR_APPENDIX.author, text: TRANSLATOR_APPENDIX.text, notice: TRANSLATOR_APPENDIX.notice },
+      null,
+      2
+    )}`,
+    `export const appendixSidebar = ${JSON.stringify(appendixSidebar, null, 2)}`,
+    `export const appendixChapters = ${JSON.stringify(appendixFlat, null, 2)}`,
     ''
   ].join('\n\n')
 
@@ -311,6 +472,13 @@ function main() {
   const escaped = [...escapeStats.entries()].map(([k, v]) => `${k}×${v}`).join('，') || '无'
   console.log(`[gen] 书目：${bookTitle}`)
   console.log(`[gen] 主传 ${tree.length} 篇，生成页面 ${pageCount} 个，跳过空子章节 ${skippedEmpty} 个`)
+  if (appendixCount) {
+    console.log(
+      `[gen] 译者附录单独成部：${TRANSLATOR_APPENDIX.author} 撰，${appendixCount} 个页面 → appendix/`
+    )
+  } else {
+    console.log('[gen] 源文未检出译者附录')
+  }
   console.log(`[gen] 行首转义：${escaped}`)
   if (warnings.length) {
     console.log(`[gen] 告警 ${warnings.length} 条：`)

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { withBase } from 'vitepress'
-import { chapters } from '../data/sidebar.mjs'
+import { appendixChapters, chapters, translator } from '../data/sidebar.mjs'
 
 interface Group {
   name: string
@@ -37,6 +37,10 @@ const groups = computed<Group[]>(() => {
 
 const total = computed(() => chapters.length)
 
+/** 译者附录不计入原著书目，单独列示 */
+const appendixTop = computed(() => appendixChapters[0])
+const appendixRest = computed(() => appendixChapters.slice(1))
+
 /** 生成数据中的链接不含 base，需补齐后才能直接作为 href 使用 */
 const href = (link: string) => withBase(link)
 </script>
@@ -62,6 +66,28 @@ const href = (link: string) => withBase(link)
           <div v-if="(group.appendices.get(main.link) || []).length" class="lb-toc-sub">
             <a
               v-for="sub in group.appendices.get(main.link)"
+              :key="sub.link"
+              :href="href(sub.link)"
+              class="lb-toc-meta"
+            >
+              {{ sub.title }}
+            </a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section v-if="appendixTop" class="lb-toc-group">
+      <h2 :id="translator.text">{{ translator.text }}</h2>
+      <p class="lb-toc-note">{{ translator.author }} 撰 · 非原著正文</p>
+
+      <div class="lb-toc-grid">
+        <article class="lb-toc-card">
+          <a :href="href(appendixTop.link)" class="lb-toc-title">{{ appendixTop.title }}</a>
+          <span class="lb-toc-meta">附录 · 共 {{ appendixChapters.length }} 页</span>
+          <div v-if="appendixRest.length" class="lb-toc-sub">
+            <a
+              v-for="sub in appendixRest"
               :key="sub.link"
               :href="href(sub.link)"
               class="lb-toc-meta"

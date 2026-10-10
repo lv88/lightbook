@@ -16,6 +16,31 @@ export const SOURCE = path.join(
 
 export const DOCS_ROOT = path.join(PROJECT_ROOT, 'docs')
 export const CHAPTERS_ROOT = path.join(DOCS_ROOT, 'chapters')
+
+/**
+ * 译者附录输出目录。
+ * 底本末尾的《学习六部》总叙是译者郭和卿（藏文法名绛巴妥默）居士自撰的文字，
+ * 叙述其译事因缘与《学习五部》的编撰原委，并非藏文原著《菩提道次第师师相承传》的正文。
+ * 因此单独成部输出，不并入 84 篇祖师行传的书目、侧边栏分组与页底「上一篇／下一篇」序列。
+ */
+export const APPENDIX_ROOT = path.join(DOCS_ROOT, 'appendix')
+
+/** 识别源文中的译者附录标题（形如「附录、《学习六部》总叙」） */
+export const APPENDIX_TITLE_RE = /^附录[、，,:：]?\s*(.+)$/
+
+export const TRANSLATOR_APPENDIX = {
+  /** 著者署名：译者本人 */
+  author: '译者绛巴妥默（郭和卿）居士',
+  /** 侧边栏分组名 */
+  text: '译者附录',
+  /** 首页上的说明文字 */
+  notice:
+    '以下《学习六部》总叙，**并非藏文原著《菩提道次第师师相承传》的正文**，' +
+    '而是汉译者绛巴妥默（郭和卿）居士自撰的文字，叙述其翻译本书的因缘，' +
+    '及增益编撰《学习五部》的原委，原书以此为附录刊行。' +
+    '为便于检阅，本站依底本全文录入，并单列为附录一部。'
+}
+
 export const DATA_FILE = path.join(DOCS_ROOT, '.vitepress', 'data', 'sidebar.mjs')
 /** 已生成的页面清单，用于下一次生成时清理陈旧文件 */
 export const MANIFEST_FILE = path.join(

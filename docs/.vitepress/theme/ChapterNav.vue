@@ -1,10 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useData, useRoute, withBase } from 'vitepress'
-import { chapters } from '../data/sidebar.mjs'
+import { appendixChapters, chapters } from '../data/sidebar.mjs'
 
 const route = useRoute()
 const { site, frontmatter } = useData()
+
+/**
+ * 译者附录不属于原著书目序列，翻页只在各自序列内进行，
+ * 避免读者沿「下一篇」从第八十四篇走进译者自撰的附录。
+ */
+const list = computed<{ title: string; link: string }[]>(() =>
+  frontmatter.value.kind === 'translator-appendix' ? appendixChapters : chapters
+)
 
 /** 当前页面链接，统一去掉 base 与尾部斜杠后与书目数据比对 */
 const currentLink = computed(() => {
@@ -16,14 +24,12 @@ const currentLink = computed(() => {
 })
 
 const index = computed(() =>
-  chapters.findIndex((item) => item.link.replace(/\/$/, '') === currentLink.value)
+  list.value.findIndex((item) => item.link.replace(/\/$/, '') === currentLink.value)
 )
 
-const prev = computed(() => (index.value > 0 ? chapters[index.value - 1] : null))
+const prev = computed(() => (index.value > 0 ? list.value[index.value - 1] : null))
 const next = computed(() =>
-  index.value >= 0 && index.value < chapters.length - 1
-    ? chapters[index.value + 1]
-    : null
+  index.value >= 0 && index.value < list.value.length - 1 ? list.value[index.value + 1] : null
 )
 
 const parent = computed(() => {

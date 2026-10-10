@@ -21,9 +21,28 @@ export interface BookSummary {
   mainCount: number
   pageCount: number
   skippedEmpty: number
+  appendixCount: number
+}
+
+export interface TranslatorInfo {
+  author: string
+  text: string
+  notice: string
+}
+
+export interface AppendixEntry {
+  title: string
+  link: string
+  group: string
+  author: string
+  parent?: string
+  type: 'translator'
 }
 
 export declare const bookTitle: string
 export declare const booksSummary: BookSummary
 export declare const sidebar: SidebarItem[]
 export declare const chapters: ChapterEntry[]
+export declare const translator: TranslatorInfo
+export declare const appendixSidebar: SidebarItem[]
+export declare const appendixChapters: AppendixEntry[]

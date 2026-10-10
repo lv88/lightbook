@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitepress'
-import { bookTitle, sidebar } from './data/sidebar.mjs'
+import { appendixSidebar, bookTitle, sidebar } from './data/sidebar.mjs'
 
 /**
  * 部署基路径：Vercel 部署在域名根路径，GitHub / Gitee Pages 部署在 /<repo>/ 子路径。
@@ -69,10 +69,12 @@ export default defineConfig({
     nav: [
       { text: '封面', link: '/' },
       { text: '全书目录', link: '/contents' },
+      { text: '译者附录', link: '/appendix/' },
       { text: '关于本书', link: '/about' }
     ],
     sidebar: {
-      '/chapters/': sidebar
+      '/chapters/': sidebar,
+      '/appendix/': appendixSidebar
     },
     outline: {
       level: [2, 3],
