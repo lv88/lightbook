@@ -8,3 +8,5 @@ docs/.vitepress/data/generated-files.json
 .vscode/
 .idea/
 .codebuddy/
+.playwright-cli/
+snap*.yaml

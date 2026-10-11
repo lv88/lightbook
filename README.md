@@ -49,7 +49,7 @@ npm run preview # 预览构建产物
 │   └── split.mjs               # 逐本构建：标题树解析 → 页面 → books.mjs
 └── docs/
     ├── index.md                # 书架首页（卡片列出各书）
-    ├── about.md                # 关于本站：书目、体例、加书步骤、版权
+    ├── about.md                # 关于本站（面向读者）：书目、体例、检索导航、版权
     └── book/                   # 生成：每书一目录
         └── <slug>/
             ├── index.md        # 生成：该书封面

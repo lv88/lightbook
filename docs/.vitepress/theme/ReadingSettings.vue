@@ -28,7 +28,7 @@ const DEFAULTS: ReadingPrefs = {
 const { isDark } = useData()
 
 const open = ref(false)
-const panelRef = ref<HTMLElement | null>(null)
+const rootRef = ref<HTMLElement | null>(null)
 const fontSize = ref(DEFAULTS.fontSize)
 const lineHeight = ref(DEFAULTS.lineHeight)
 const letterSpacing = ref(DEFAULTS.letterSpacing)
@@ -88,10 +88,15 @@ function reset() {
   theme.value = DEFAULTS.theme
 }
 
+/**
+ * 关闭面板的判定基准是组件根节点，而非面板本身：
+ * 触发按钮与面板都算「内部」，否则同一次点击会先开后关（微任务 flush 后面板已挂载，
+ * 按钮仍在面板之外，冒泡到 document 时会被判为外部点击而立即关闭）。
+ */
 function onDocumentClick(event: MouseEvent) {
   if (!open.value) return
   const target = event.target as Node | null
-  if (panelRef.value && target && !panelRef.value.contains(target)) open.value = false
+  if (rootRef.value && target && !rootRef.value.contains(target)) open.value = false
 }
 
 function onKeydown(event: KeyboardEvent) {
@@ -119,7 +124,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="lb-reading-settings">
+  <div ref="rootRef" class="lb-reading-settings">
     <button
       class="lb-reading-button"
       type="button"
@@ -133,7 +138,6 @@ onUnmounted(() => {
     <Transition name="lb-panel">
       <section
         v-if="open"
-        ref="panelRef"
         class="lb-panel"
         role="dialog"
         aria-label="阅读设置"
