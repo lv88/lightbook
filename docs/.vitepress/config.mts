@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitepress'
-import { appendixSidebar, bookTitle, sidebar } from './data/sidebar.mjs'
+import { books, sidebarByPath } from './data/books.mjs'
 
 /**
  * 部署基路径：Vercel 部署在域名根路径，GitHub / Gitee Pages 部署在 /<repo>/ 子路径。
@@ -15,9 +15,10 @@ const resolveBase = (): string => {
 
 const base = resolveBase()
 
-const SITE_TITLE = '菩提道次第师师相承传'
+const SITE_TITLE = 'lightbook 电子书架'
 const SITE_DESC =
-  '《菩提道次第师师相承传——庄严圣教最胜宝鬘》郭和卿译本简体横排电子版：八十四篇祖师行传、附传与全圆道体师承脉络。'
+  books.map((book) => `《${book.title}》`).join('、') +
+  '——简体横排电子版，逐篇成页，可全文检索。'
 
 /**
  * 阅读偏好的首帧应用脚本：在首屏渲染前把已保存的字号、行距、主题写进 <html>，
@@ -57,8 +58,7 @@ export default defineConfig({
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: `${base}favicon.svg` }],
     ['meta', { name: 'theme-color', content: '#9e2b25' }],
-    ['meta', { name: 'author', content: '耶喜绛称 著 · 郭和卿 译' }],
-    ['meta', { property: 'og:title', content: `${SITE_TITLE}——庄严圣教最胜宝鬘` }],
+    ['meta', { property: 'og:title', content: SITE_TITLE }],
     ['meta', { property: 'og:description', content: SITE_DESC }],
     ['script', {}, READING_PREF_BOOTSTRAP]
   ],
@@ -67,15 +67,11 @@ export default defineConfig({
   },
   themeConfig: {
     nav: [
-      { text: '封面', link: '/' },
-      { text: '全书目录', link: '/contents' },
-      { text: '译者附录', link: '/appendix/' },
-      { text: '关于本书', link: '/about' }
+      { text: '书架', link: '/' },
+      { text: '书目', items: books.map((book) => ({ text: book.title, link: book.link })) },
+      { text: '关于本站', link: '/about' }
     ],
-    sidebar: {
-      '/chapters/': sidebar,
-      '/appendix/': appendixSidebar
-    },
+    sidebar: { ...sidebarByPath },
     outline: {
       level: [2, 3],
       label: '本篇大纲'
@@ -84,7 +80,7 @@ export default defineConfig({
       prev: '上一篇',
       next: '下一篇'
     },
-    sidebarMenuLabel: '全书篇目',
+    sidebarMenuLabel: '本书篇目',
     returnToTopLabel: '回到顶部',
     darkModeSwitchLabel: '深浅色',
     lightModeSwitchTitle: '切换到浅色（宣纸）',
@@ -92,7 +88,7 @@ export default defineConfig({
     skipToContentLabel: '跳到正文',
     footer: {
       message: '',
-      copyright: `${bookTitle} · 郭和卿译本 · 简体横排电子版`
+      copyright: `${SITE_TITLE} · 简体横排电子版 · 仅供个人学习研究`
     },
     search: {
       provider: 'local',
@@ -114,7 +110,7 @@ export default defineConfig({
               navigateText: '上下浏览',
               navigateUpKeyAriaLabel: '向上箭头',
               navigateDownKeyAriaLabel: '向下箭头',
-              closeText: '关闭',
+              closeText: '关闭检索',
               closeKeyAriaLabel: '退出键'
             }
           }

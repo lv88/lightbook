@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "《菩提道次第师师相承传——庄严圣教最胜宝鬘》郭和卿译本 VitePress 电子书站",
+  "description": "lightbook 电子书架：sources/ 下的多份源 md 生成多本 VitePress 电子书",
   "scripts": {
     "gen": "node scripts/split.mjs",
     "dev": "npm run gen && vitepress dev docs",

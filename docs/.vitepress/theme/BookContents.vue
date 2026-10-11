@@ -1,33 +1,42 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { withBase } from 'vitepress'
-import { appendixChapters, chapters, translator } from '../data/sidebar.mjs'
+import { appendixChaptersByBook, books, chaptersByBook } from '../data/books.mjs'
+import type { ChapterEntry as Entry } from '../data/books.mjs'
+
+const props = defineProps<{ slug: string }>()
 
 interface Group {
   name: string
-  mains: (typeof chapters)[number][]
-  appendices: Map<string, (typeof chapters)[number][]>
+  mains: Entry[]
+  subs: Map<string, Entry[]>
 }
 
+const entries = computed<Entry[]>(() => chaptersByBook[props.slug] ?? [])
+const appendixEntries = computed<Entry[]>(() => appendixChaptersByBook[props.slug] ?? [])
+const translator = computed(() => books.find((book) => book.slug === props.slug)?.translator ?? null)
+
+/** 按 group 聚合成「主篇 → 附篇」两级；卷前、卷末各自成组 */
 const groups = computed<Group[]>(() => {
   const map = new Map<string, Group>()
-  for (const entry of chapters) {
-    let group = map.get(entry.group)
+  for (const entry of entries.value) {
+    const name = entry.group ?? ''
+    let group = map.get(name)
     if (!group) {
-      group = { name: entry.group, mains: [], appendices: new Map() }
-      map.set(entry.group, group)
+      group = { name, mains: [], subs: new Map() }
+      map.set(name, group)
     }
-    if (entry.type === 'main') {
+    if (entry.kind !== 'sub') {
       group.mains.push(entry)
-      group.appendices.set(entry.link, [])
+      group.subs.set(entry.link, [])
     }
   }
-  for (const entry of chapters) {
-    if (entry.type !== 'appendix' || !entry.parent) continue
+  for (const entry of entries.value) {
+    if (entry.kind !== 'sub' || !entry.parent) continue
     for (const group of map.values()) {
       const main = group.mains.find((item) => item.title === entry.parent)
       if (main) {
-        group.appendices.get(main.link)?.push(entry)
+        group.subs.get(main.link)?.push(entry)
         break
       }
     }
@@ -35,11 +44,8 @@ const groups = computed<Group[]>(() => {
   return [...map.values()]
 })
 
-const total = computed(() => chapters.length)
-
-/** 译者附录不计入原著书目，单独列示 */
-const appendixTop = computed(() => appendixChapters[0])
-const appendixRest = computed(() => appendixChapters.slice(1))
+const mainCount = computed(() => entries.value.filter((item) => item.kind === 'chapter').length)
+const total = computed(() => entries.value.length + appendixEntries.value.length)
 
 /** 生成数据中的链接不含 base，需补齐后才能直接作为 href 使用 */
 const href = (link: string) => withBase(link)
@@ -48,8 +54,7 @@ const href = (link: string) => withBase(link)
 <template>
   <div class="lb-book-contents">
     <p class="lb-count">
-      全书共 {{ chapters.filter((c) => c.type === 'main').length }} 篇祖师行传，
-      连附传合计 {{ total }} 个篇目。
+      本书共 {{ mainCount }} 篇正文，连卷前、附篇与卷末合计 {{ total }} 个篇目。
     </p>
 
     <section v-for="group in groups" :key="group.name" class="lb-toc-group">
@@ -59,13 +64,14 @@ const href = (link: string) => withBase(link)
       <div class="lb-toc-grid">
         <article v-for="main in group.mains" :key="main.link" class="lb-toc-card">
           <a :href="href(main.link)" class="lb-toc-title">{{ main.title }}</a>
-          <span class="lb-toc-meta">
-            第 {{ main.ordinal }} 篇 · 附传
-            {{ (group.appendices.get(main.link) || []).length }} 篇
+          <span v-if="main.ordinal" class="lb-toc-meta">
+            第 {{ main.ordinal }} 篇<template v-if="(group.subs.get(main.link) || []).length">
+              · 附传 {{ (group.subs.get(main.link) || []).length }} 篇</template
+            >
           </span>
-          <div v-if="(group.appendices.get(main.link) || []).length" class="lb-toc-sub">
+          <div v-if="(group.subs.get(main.link) || []).length" class="lb-toc-sub">
             <a
-              v-for="sub in group.appendices.get(main.link)"
+              v-for="sub in group.subs.get(main.link)"
               :key="sub.link"
               :href="href(sub.link)"
               class="lb-toc-meta"
@@ -77,24 +83,21 @@ const href = (link: string) => withBase(link)
       </div>
     </section>
 
-    <section v-if="appendixTop" class="lb-toc-group">
-      <h2 :id="translator.text">{{ translator.text }}</h2>
-      <p class="lb-toc-note">{{ translator.author }} 撰 · 非原著正文</p>
+    <section v-if="appendixEntries.length" class="lb-toc-group">
+      <h2 :id="translator ? translator.text : '附录'">
+        {{ translator ? translator.text : '附录' }}
+      </h2>
+      <p class="lb-toc-note">
+        <template v-if="translator">{{ translator.author }} 撰 · 非原著正文</template>
+        <template v-else>共 {{ appendixEntries.length }} 页 · 不计入正文篇目</template>
+      </p>
 
       <div class="lb-toc-grid">
-        <article class="lb-toc-card">
-          <a :href="href(appendixTop.link)" class="lb-toc-title">{{ appendixTop.title }}</a>
-          <span class="lb-toc-meta">附录 · 共 {{ appendixChapters.length }} 页</span>
-          <div v-if="appendixRest.length" class="lb-toc-sub">
-            <a
-              v-for="sub in appendixRest"
-              :key="sub.link"
-              :href="href(sub.link)"
-              class="lb-toc-meta"
-            >
-              {{ sub.title }}
-            </a>
-          </div>
+        <article v-for="item in appendixEntries" :key="item.link" class="lb-toc-card">
+          <a :href="href(item.link)" class="lb-toc-title">{{ item.title }}</a>
+          <span class="lb-toc-meta">
+            {{ item.parent ? '附录之一节' : '附录' }}
+          </span>
         </article>
       </div>
     </section>

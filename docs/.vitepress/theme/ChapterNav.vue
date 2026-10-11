@@ -1,18 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useData, useRoute, withBase } from 'vitepress'
-import { appendixChapters, chapters } from '../data/sidebar.mjs'
+import { appendixChaptersByBook, bookByPath, chaptersByBook } from '../data/books.mjs'
+import type { ChapterEntry } from '../data/books.mjs'
 
 const route = useRoute()
 const { site, frontmatter } = useData()
-
-/**
- * 译者附录不属于原著书目序列，翻页只在各自序列内进行，
- * 避免读者沿「下一篇」从第八十四篇走进译者自撰的附录。
- */
-const list = computed<{ title: string; link: string }[]>(() =>
-  frontmatter.value.kind === 'translator-appendix' ? appendixChapters : chapters
-)
 
 /** 当前页面链接，统一去掉 base 与尾部斜杠后与书目数据比对 */
 const currentLink = computed(() => {
@@ -21,6 +14,25 @@ const currentLink = computed(() => {
   if (base !== '/' && path.startsWith(base)) path = path.slice(base.length)
   if (!path.startsWith('/')) path = `/${path}`
   return path.replace(/\/$/, '')
+})
+
+/** 所属书：优先取页面 frontmatter 的 book，回退到按路径前缀匹配 */
+const slug = computed<string | null>(
+  () => frontmatter.value.book ?? bookByPath(`${currentLink.value}/`)?.slug ?? null
+)
+
+/**
+ * 附录不属于正文书目序列，翻页只在各自序列内进行，
+ * 避免读者沿「下一篇」从末篇正文走进附录。
+ * 翻页始终限制在当前书内，不跨书。
+ */
+const kind = computed(() => frontmatter.value.kind ?? '')
+const isAppendix = computed(() => kind.value === 'appendix' || kind.value === 'translator-appendix')
+
+const list = computed<ChapterEntry[]>(() => {
+  if (!slug.value) return []
+  const source = isAppendix.value ? appendixChaptersByBook : chaptersByBook
+  return source[slug.value] ?? []
 })
 
 const index = computed(() =>
@@ -37,6 +49,8 @@ const parent = computed(() => {
   const link = frontmatter.value.parentLink
   return title && link ? { title, link } : null
 })
+
+const contentsLink = computed(() => (slug.value ? `/book/${slug.value}/contents` : null))
 
 /** 书目数据与常量链接都不含 base，需补齐后才能作为 href */
 const href = (link: string) => withBase(link)
@@ -64,8 +78,8 @@ const href = (link: string) => withBase(link)
       </span>
     </div>
 
-    <p class="lb-nav-toc">
-      <a :href="href('/contents')">全书目录</a>
+    <p v-if="contentsLink" class="lb-nav-toc">
+      <a :href="href(contentsLink)">本书目录</a>
     </p>
   </nav>
 </template>

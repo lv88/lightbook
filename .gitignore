@@ -7,3 +7,4 @@ docs/.vitepress/data/generated-files.json
 *.log
 .vscode/
 .idea/
+.codebuddy/
