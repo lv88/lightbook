@@ -31,6 +31,11 @@ const READING_PREF_BOOTSTRAP = `(function(){try{var s=JSON.parse(localStorage.ge
  * 拉丁字母与数字按词切出。函数必须自包含——VitePress 会把 siteData 中的函数
  * 序列化到客户端求值，无法携带闭包变量。
  */
+/**
+ * 侧边栏显隐的首帧应用脚本：在首屏渲染前决定是否收起左侧目录，避免闪动。
+ */
+const SIDEBAR_BOOTSTRAP = `(function(){try{if(localStorage.getItem('lightbook-sidebar')==='hidden')document.documentElement.classList.add('lb-sidebar-hidden')}catch(e){}})()`
+
 const tokenize = (text: string): string[] => {
   const tokens: string[] = []
   const cjk = new RegExp('[\\u3400-\\u4DBF\\u4E00-\\u9FFF\\uF900-\\uFAFF\\u3040-\\u30FF]')
@@ -60,7 +65,8 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#9e2b25' }],
     ['meta', { property: 'og:title', content: SITE_TITLE }],
     ['meta', { property: 'og:description', content: SITE_DESC }],
-    ['script', {}, READING_PREF_BOOTSTRAP]
+    ['script', {}, READING_PREF_BOOTSTRAP],
+    ['script', {}, SIDEBAR_BOOTSTRAP]
   ],
   markdown: {
     lineNumbers: false

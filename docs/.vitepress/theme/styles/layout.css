@@ -8,6 +8,23 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* ---------- 收起左侧本书目录 ---------- */
+
+@media (min-width: 960px) {
+  html.lb-sidebar-hidden .VPSidebar {
+    display: none;
+  }
+
+  html.lb-sidebar-hidden .VPContent.has-sidebar {
+    padding-left: 0;
+  }
+
+  html.lb-sidebar-hidden .VPDoc.has-sidebar .content,
+  html.lb-sidebar-hidden .VPDoc.has-sidebar .container {
+    margin: 0 auto;
+  }
+}
+
 /* ---------- 正文排版 ---------- */
 
 .vp-doc {
