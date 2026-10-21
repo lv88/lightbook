@@ -469,7 +469,7 @@ export const sidebarByPath = {
           ]
         },
         {
-          "text": "四十八、克主·玛尾利玛格勒伯桑大师的历史",
+          "text": "四十八、克主杰·玛尾利玛格勒伯桑大师的历史",
           "link": "/book/bodhi-path/chapters/48/"
         },
         {
@@ -1518,7 +1518,7 @@ export const chaptersByBook = {
       "parent": "四十七、成就自在上师绛伯嘉措的历史"
     },
     {
-      "title": "四十八、克主·玛尾利玛格勒伯桑大师的历史",
+      "title": "四十八、克主杰·玛尾利玛格勒伯桑大师的历史",
       "link": "/book/bodhi-path/chapters/48/",
       "kind": "chapter",
       "ordinal": 48,
