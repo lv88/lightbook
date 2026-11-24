@@ -19,9 +19,33 @@ body {
     padding-left: 0;
   }
 
-  html.lb-sidebar-hidden .VPDoc.has-sidebar .content,
+  /* 隐藏右侧大纲，使正文真正占满屏幕宽度 */
+  html.lb-sidebar-hidden .VPDoc.has-sidebar .aside {
+    display: none;
+  }
+
+  /* 解除正文宽度上限并取消居中，铺满整个可用宽度 */
   html.lb-sidebar-hidden .VPDoc.has-sidebar .container {
-    margin: 0 auto;
+    display: block;
+    max-width: none;
+  }
+
+  html.lb-sidebar-hidden .VPDoc.has-sidebar .content,
+  html.lb-sidebar-hidden .VPDoc.has-sidebar .content-container {
+    display: block;
+    max-width: none;
+    margin: 0;
+  }
+
+  /* 隐藏目录时，去掉品牌区（站名）多余的底边线，使其与中间菜单、右侧控件风格统一 */
+  html.lb-sidebar-hidden .VPNavBarTitle.has-sidebar .title {
+    border-bottom-color: transparent;
+  }
+
+  /* 隐藏目录后，左品牌区原本靠左侧目录的实底色衬底；目录消失后内容会透出。
+     故给整个导航栏铺上不透明背景，滚动时文字不再透出，左/中/右风格统一 */
+  html.lb-sidebar-hidden .VPNavBar.has-sidebar {
+    background-color: var(--vp-nav-bg-color);
   }
 }
 
